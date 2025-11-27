@@ -1,4 +1,7 @@
 package com.skilloVilla.Repository;
 
-public interface BookCollectionRepository {
+import com.skilloVilla.Entity.BookCollection;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface BookCollectionRepository extends JpaRepository<BookCollection, Integer> {
 }

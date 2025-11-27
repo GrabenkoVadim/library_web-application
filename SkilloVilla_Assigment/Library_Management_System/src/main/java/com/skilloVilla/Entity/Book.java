@@ -4,19 +4,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.validation.constraints.AssertFalse;
-import javax.validation.constraints.AssertTrue;
-import javax.validation.constraints.Size;
-import javax.validation.groups.Default;
-
-import org.springframework.beans.factory.annotation.Value;
+import javax.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -30,16 +18,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Book {
-	
-   /*
-    * This class is Entity class name as Book 
-    * This class automatically create in the data base because of Entity Annotation
-    * This class have some column mention below
-    * In this class column have validation for entering the data
-    * Class have "ManyToOne" relation with the User Entity
-    * */
-	
-	
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer bookId;
@@ -64,6 +43,18 @@ public class Book {
     
     @ManyToOne
     private User user;
-    
-   	
+
+    @ManyToMany
+    @JoinTable(
+            name = "book_author",
+            joinColumns = @JoinColumn(name = "book_id"),
+            inverseJoinColumns = @JoinColumn(name = "author_id")
+    )
+    private List<Author> authors = new ArrayList<>();
+
+    @ManyToMany(mappedBy = "books")
+    @JsonIgnore
+    private List<BookCollection> collections = new ArrayList<>();
+
+
 }

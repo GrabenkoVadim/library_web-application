@@ -1,4 +1,7 @@
 package com.skilloVilla.Repository;
 
-public class ReaderRepository {
+import com.skilloVilla.Entity.Reader;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface ReaderRepository extends JpaRepository<Reader, Integer> {
 }

@@ -50,10 +50,6 @@ public class LibraryUser {
 		user4.setUserEmail("diksha.choudhary@gmail.com");
 		user4.setUserAddress("Dewas");
 		userRepository.save(user4);
-		
-		
-		
+
 	}
-	
-	
 }
