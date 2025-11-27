@@ -10,12 +10,14 @@ import com.skilloVilla.Repository.BookRepository;
 import com.skilloVilla.Repository.LoanRepository;
 import com.skilloVilla.Repository.ReaderRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -30,32 +32,33 @@ public class LoanService {
 
     // Видача книги
     public LoanDto issueBook(LoanRequestDto request) {
+        Reader reader = readerRepository.findById(request.getReaderId())
+                .orElseThrow(() -> new NotFoundException("Reader not found with id " + request.getReaderId()));
+
         Book book = bookRepository.findById(request.getBookId())
                 .orElseThrow(() -> new NotFoundException("Book not found with id " + request.getBookId()));
 
         if (book.isIssued()) {
-            throw new NotFoundException("Book is already issued");
+            throw new IllegalStateException("Book is already issued");
         }
 
-        Reader reader = readerRepository.findById(request.getReaderId())
-                .orElseThrow(() -> new NotFoundException("Reader not found with id " + request.getReaderId()));
-
-        LocalDate issueDate = LocalDate.now();
         int days = request.getDays() != null && request.getDays() > 0
                 ? request.getDays()
                 : DEFAULT_LOAN_DAYS;
-        LocalDate dueDate = issueDate.plusDays(days);
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime dueDate = now.plusDays(days);
 
         Loan loan = new Loan();
         loan.setBook(book);
         loan.setReader(reader);
-        loan.setIssueDate(issueDate);
+        loan.setIssueDate(now);
         loan.setDueDate(dueDate);
         loan.setReturned(false);
 
-        // оновлюємо саму книгу
+        // оновлюємо книгу
         book.setIssued(true);
-        book.setBookIssueDate(issueDate);
+        book.setBookIssueDate(now);
         book.setBookReturnDate(dueDate);
 
         Loan savedLoan = loanRepository.save(loan);
@@ -66,6 +69,7 @@ public class LoanService {
         return toDto(savedLoan);
     }
 
+
     // Повернення книги
     public LoanDto returnBook(Integer loanId) {
         Loan loan = loanRepository.findById(loanId)
@@ -75,7 +79,8 @@ public class LoanService {
             throw new NotFoundException("Loan is already marked as returned");
         }
 
-        LocalDate now = LocalDate.now();
+        LocalDateTime now = LocalDateTime.now();
+
         loan.setReturned(true);
         loan.setReturnDate(now);
 
@@ -90,6 +95,7 @@ public class LoanService {
 
         return toDto(saved);
     }
+
 
     // Усі операції
     public List<LoanDto> getAll() {
@@ -136,16 +142,16 @@ public class LoanService {
     }
 
     public List<LoanDto> getRecent(int limit) {
-        if (limit <= 0) {
-            limit = 10;
-        }
+        Pageable pageable = PageRequest.of(
+                0,
+                limit,
+                Sort.by(Sort.Direction.DESC, "issueDate") // або "returnDate" / "createdAt"
+        );
 
-        var pageRequest = PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "issueDate"));
-
-        return loanRepository.findAll(pageRequest)
+        return loanRepository.findAll(pageable)
                 .getContent()
                 .stream()
                 .map(this::toDto)
-                .toList();
+                .collect(Collectors.toList());
     }
 }

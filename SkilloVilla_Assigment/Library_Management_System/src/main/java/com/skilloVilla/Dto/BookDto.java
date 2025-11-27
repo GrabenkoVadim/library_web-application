@@ -4,7 +4,7 @@ import lombok.Data;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 public class BookDto {
@@ -25,7 +25,7 @@ public class BookDto {
     @Size(max = 2500, message = "Description must be at most 2500 characters")
     private String description;
 
-    private LocalDate issueDate;
-    private LocalDate returnDate;
+    private LocalDateTime issueDate;
+    private LocalDateTime returnDate;
     private boolean issued;
 }

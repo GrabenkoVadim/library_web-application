@@ -30,10 +30,9 @@
         <section id="view-home" class="view view--active">
             <h1>Головна сторінка</h1>
 
-            <section class="card">
+            <div class="card">
                 <h2>Нещодавні операції</h2>
-                <!-- Поки що статична таблиця-заглушка,
-                     потім підмінемо на дані з /api/loans/recent -->
+
                 <table class="table">
                     <thead>
                     <tr>
@@ -44,28 +43,90 @@
                     </tr>
                     </thead>
                     <tbody id="recent-operations-body">
-                    <tr>
-                        <td>Приклад Ігор</td>
-                        <td>Мистецтво війни</td>
-                        <td>Видача</td>
-                        <td>27.11.2025</td>
-                    </tr>
+                    <!-- JS сюди підставить рядки -->
                     </tbody>
                 </table>
-            </section>
+            </div>
         </section>
+
 
         <!-- Каталог книг -->
         <section id="view-books" class="view">
             <h1>Каталог книг</h1>
-            <p>Тут буде таблиця книг та кнопки для додавання / редагування / видачі.</p>
+
+            <!-- Панель керування згори -->
+            <div class="toolbar">
+                <div class="toolbar-left">
+                    <input id="book-search" type="text" class="input"
+                           placeholder="Пошук за назвою або автором">
+
+                    <label>
+                        <input type="checkbox" id="books-only-available">
+                        Лише доступні
+                    </label>
+
+                    <button id="book-filter-btn" class="btn btn-secondary">Фільтр</button>
+
+                </div>
+
+                <div class="toolbar-right">
+                    <button id="book-add-btn" class="btn btn-primary">Додати книгу</button>
+                </div>
+            </div>
+
+            <!-- Таблиця книг -->
+            <div class="card card--no-margin-top">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>Назва</th>
+                        <th>Автор(и)</th>
+                        <th>Рік</th>
+                        <th>Жанр</th>
+                        <th>Статус</th>
+                        <th style="width: 160px;">Дії</th>
+                    </tr>
+                    </thead>
+                    <tbody id="books-table-body">
+                    <!-- Поки що заповнюємо з JS mock-даними -->
+                    </tbody>
+                </table>
+
+                <!-- Проста пагінація -->
+                <div class="pagination">
+                    <button class="btn btn-light" id="page-prev">&lt;</button>
+                    <span id="page-info">1 з 1</span>
+                    <button class="btn btn-light" id="page-next">&gt;</button>
+                </div>
+            </div>
         </section>
 
         <!-- Читачі -->
         <section id="view-readers" class="view">
-            <h1>Читачі</h1>
-            <p>Тут буде список читачів та форми для їх редагування.</p>
+            <div class="view__header">
+                <h1>Читачі</h1>
+                <button class="btn btn-primary" id="reader-add-btn">Додати читача</button>
+            </div>
+
+            <div class="card">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>ПІБ</th>
+                        <th>Email</th>
+                        <th>Телефон</th>
+                        <th>Адреса</th>
+                        <th>Дії</th>
+                    </tr>
+                    </thead>
+                    <tbody id="readers-table-body">
+                    <!-- JS підставить рядки -->
+                    </tbody>
+                </table>
+            </div>
         </section>
+
+
 
         <!-- Адмінка -->
         <section id="view-admin" class="view">
@@ -73,8 +134,124 @@
             <p>Тут буде керування бібліотекарями та журнал дій.</p>
         </section>
 
+        <!-- Модальне вікно для додавання / редагування книги -->
+        <div id="book-modal" class="modal hidden">
+            <div class="modal__backdrop"></div>
+            <div class="modal__window">
+                <h2 id="book-modal-title">Додати книгу</h2>
+
+                <form id="book-form" class="modal__form">
+                    <input type="hidden" id="book-id">
+
+                    <div class="form-group">
+                        <label for="book-name">Назва книги</label>
+                        <input type="text" id="book-name" class="input" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="book-author">Автор(и)</label>
+                        <input type="text" id="book-author" class="input" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="book-publisher">Видавництво</label>
+                        <input type="text" id="book-publisher" class="input" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="book-description">Опис</label>
+                        <textarea id="book-description" class="textarea" rows="4"></textarea>
+                    </div>
+
+                    <div class="modal__buttons">
+                        <button type="button" class="btn btn-light" id="book-cancel-btn">Скасувати</button>
+                        <button type="submit" class="btn btn-primary" id="book-save-btn">Зберегти</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Модальне вікно для видачі книги читачу -->
+        <div id="issue-modal" class="modal hidden">
+            <div class="modal__backdrop"></div>
+            <div class="modal__window">
+                <h2>Видати книгу</h2>
+
+                <form id="issue-form" class="modal__form">
+                    <input type="hidden" id="issue-book-id">
+
+                    <div class="form-group">
+                        <label>Книга</label>
+                        <div id="issue-book-title" style="font-weight: 600;"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="issue-reader">Читач</label>
+                        <select id="issue-reader" class="input" required>
+                            <option value="">Оберіть читача...</option>
+                            <!-- далі JS підставить читачів -->
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="issue-days">Кількість днів</label>
+                        <input
+                                type="number"
+                                id="issue-days"
+                                class="input"
+                                min="1"
+                                value="14"
+                                required
+                        >
+                    </div>
+
+                    <div class="modal__buttons">
+                        <button type="button" class="btn btn-light" id="issue-cancel-btn">Скасувати</button>
+                        <button type="submit" class="btn btn-primary">Видати</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+
     </main>
 
+</div>
+
+<div id="reader-modal" class="modal hidden">
+    <div class="modal__backdrop"></div>
+    <div class="modal__window">
+        <h2 id="reader-modal-title">Читач</h2>
+
+        <form id="reader-form" class="modal__form">
+            <input type="hidden" id="reader-id">
+
+            <div class="form-group">
+                <label for="reader-fullName">ПІБ</label>
+                <input type="text" id="reader-fullName" class="input" required>
+            </div>
+
+            <div class="form-group">
+                <label for="reader-email">Email</label>
+                <input type="email" id="reader-email" class="input">
+            </div>
+
+            <div class="form-group">
+                <label for="reader-phone">Телефон</label>
+                <input type="text" id="reader-phone" class="input">
+            </div>
+
+            <div class="form-group">
+                <label for="reader-address">Адреса</label>
+                <input type="text" id="reader-address" class="input">
+            </div>
+
+            <div class="modal__buttons">
+                <button type="button" class="btn btn-light" id="reader-cancel-btn">Скасувати</button>
+                <button type="submit" class="btn btn-primary">Зберегти</button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <!-- Підключаємо JS -->

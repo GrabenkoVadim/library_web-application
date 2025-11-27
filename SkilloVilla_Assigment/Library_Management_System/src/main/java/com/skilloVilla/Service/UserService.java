@@ -3,7 +3,6 @@ package com.skilloVilla.Service;
 import com.skilloVilla.Dto.UserCreateDto;
 import com.skilloVilla.Entity.AppUser;
 import com.skilloVilla.Entity.Role;
-import com.skilloVilla.Exception.NotFoundException;
 import com.skilloVilla.Repository.AppUserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;

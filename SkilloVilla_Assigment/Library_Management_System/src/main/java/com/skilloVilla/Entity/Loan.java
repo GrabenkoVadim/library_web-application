@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @Entity
@@ -23,9 +23,9 @@ public class Loan {
     @ManyToOne(optional = false)
     private Reader reader;
 
-    private LocalDate issueDate;
-    private LocalDate dueDate;
-    private LocalDate returnDate;
+    private LocalDateTime issueDate;
+    private LocalDateTime dueDate;
+    private LocalDateTime returnDate;
 
     private boolean returned = false;
 }

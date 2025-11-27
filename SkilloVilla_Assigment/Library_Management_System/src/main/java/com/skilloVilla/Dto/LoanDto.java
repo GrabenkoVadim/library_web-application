@@ -1,8 +1,9 @@
 package com.skilloVilla.Dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 public class LoanDto {
@@ -11,8 +12,13 @@ public class LoanDto {
     private String bookName;
     private Integer readerId;
     private String readerName;
-    private LocalDate issueDate;
-    private LocalDate dueDate;
-    private LocalDate returnDate;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime issueDate;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime dueDate;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime returnDate;
     private boolean returned;
 }

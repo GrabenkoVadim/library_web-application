@@ -1,6 +1,6 @@
 package com.skilloVilla.Entity;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,9 +35,9 @@ public class Book {
     @Column(length = 2500)
 	private String bookDescription;
     
-    private LocalDate bookIssueDate;
+    private LocalDateTime bookIssueDate;
     
-    private LocalDate bookReturnDate;
+    private LocalDateTime bookReturnDate;
     
     private boolean isIssued = false;
     
