@@ -1,44 +1,77 @@
 package com.skilloVilla.Controller;
 
-import java.time.LocalDate;
+import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import com.skilloVilla.Dto.BookDto;
+import com.skilloVilla.Dto.AuthorDto;
+import com.skilloVilla.Service.BookService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import com.skilloVilla.Service.BookIssueReturnImpl;
+import javax.validation.Valid;
+
 
 @RestController
+@RequiredArgsConstructor
+@RequestMapping("/api/books")
 public class BookController {
-	
-	@Autowired
-	BookIssueReturnImpl bookIssueReturnImpl;
 
-	/* Issue book API */
-	@PostMapping("/bookIssue/{userId}")
-	public ResponseEntity<LocalDate> bookIssueControlHandler(
-		    @PathVariable("userId") Integer userId,
-			@RequestParam String bookName){
-		
-		LocalDate date = bookIssueReturnImpl.issueBook(bookName, userId);
-		
-		return new ResponseEntity<LocalDate>(date, HttpStatus.OK);
-	}
-	
-	
-	/* Return Book API */
-	@PostMapping("/bookReturn/{userId}/{bookId}")
-	public ResponseEntity<Integer> bookReturnControlHandler(
-			@PathVariable("userId") Integer userId,
-			@PathVariable("bookId") Integer bookId){
-		
-		Integer Response = bookIssueReturnImpl.returnBook( userId, bookId);
-		
-		return new ResponseEntity<Integer>(Response, HttpStatus.OK);
-	}
+    private final BookService bookService;
 
+    /**
+     * GET /api/books
+     */
+    @GetMapping
+    public List<BookDto> getBooks(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String author,
+            @RequestParam(required = false) Boolean issued
+    ) {
+        return bookService.getAll(name, author, issued);
+    }
+
+    /**
+     * GET /api/books/{id}
+     */
+    @GetMapping("/{id}")
+    public BookDto getBook(@PathVariable Integer id) {
+        return bookService.getById(id);
+    }
+
+    /**
+     * GET /api/books/{id}/authors
+     * */
+    @GetMapping("/{id}/authors")
+    public List<AuthorDto> getBookAuthors(@PathVariable Integer id) {
+        return bookService.getAuthorsByBook(id);
+    }
+
+
+    /**
+     * POST /api/books
+     */
+    @PostMapping
+    public ResponseEntity<BookDto> createBook(@Valid @RequestBody BookDto dto) {
+        BookDto created = bookService.create(dto);
+        return new ResponseEntity<>(created, HttpStatus.CREATED);
+    }
+
+    /**
+     * PUT /api/books/{id}
+     */
+    @PutMapping("/{id}")
+    public BookDto updateBook(@PathVariable Integer id, @Valid @RequestBody BookDto dto) {
+        return bookService.update(id, dto);
+    }
+
+    /**
+     * DELETE /api/books/{id}
+     */
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteBook(@PathVariable Integer id) {
+        bookService.delete(id);
+    }
 }
