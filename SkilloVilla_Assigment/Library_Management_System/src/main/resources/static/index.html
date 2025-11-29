@@ -15,13 +15,20 @@
     <!-- Ліва панель навігації -->
     <aside class="sidebar">
         <div class="sidebar__title">Library</div>
+
         <nav class="sidebar__nav">
             <button class="nav-btn active" data-view="home">Головна</button>
             <button class="nav-btn" data-view="books">Каталог книг</button>
             <button class="nav-btn" data-view="readers">Читачі</button>
             <button class="nav-btn" data-view="admin">Адмінка</button>
         </nav>
+
+        <div class="sidebar-user">
+            <div id="current-user">Ви увійшли як: admin</div>
+            <button id="logout-btn" class="btn btn-light sidebar-logout-btn">Вийти</button>
+        </div>
     </aside>
+
 
     <!-- Основна частина -->
     <main class="main">
@@ -128,11 +135,115 @@
 
 
 
-        <!-- Адмінка -->
         <section id="view-admin" class="view">
             <h1>Адмінка</h1>
-            <p>Тут буде керування бібліотекарями та журнал дій.</p>
+
+            <!-- КОРИСТУВАЧІ -->
+            <div class="card">
+                <div class="toolbar">
+                    <div class="toolbar-left">
+                        <h2>Користувачі бібліотеки</h2>
+                    </div>
+                    <div class="toolbar-right">
+                        <button id="admin-add-user-btn" class="btn btn-primary">
+                            Додати бібліотекаря
+                        </button>
+                    </div>
+                </div>
+
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Логін</th>
+                        <th>Роль</th>
+                        <th style="width: 180px;">Дії</th>
+                    </tr>
+                    </thead>
+                    <tbody id="admin-users-table-body">
+                    <!-- заповнюємо з JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- ЖУРНАЛ ДІЙ -->
+            <div class="card" style="margin-top: 24px;">
+                <div class="toolbar">
+                    <div class="toolbar-left">
+                        <h2>Журнал дій</h2>
+                    </div>
+                </div>
+
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>Час</th>
+                        <th>Користувач</th>
+                        <th>Дія</th>
+                        <th>Об’єкт</th>
+                    </tr>
+                    </thead>
+                    <tbody id="admin-logs-table-body">
+                    <!-- заповнюємо з JS -->
+                    </tbody>
+                </table>
+            </div>
         </section>
+
+        <!-- Модалка створення / редагування користувача -->
+        <!-- Модалка створення / редагування користувача -->
+        <div id="user-modal" class="modal hidden">
+            <div class="modal__backdrop"></div>
+            <div class="modal__window">
+                <h2 id="user-modal-title">Новий бібліотекар</h2>
+
+                <form id="user-form" class="modal__form">
+                    <input type="hidden" id="user-id">
+
+                    <div class="form-group">
+                        <label for="user-username">Логін</label>
+                        <input id="user-username" type="text" class="input" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="checkbox-inline">
+                            <input type="checkbox" id="user-change-password">
+                            Змінити пароль
+                        </label>
+                    </div>
+
+                    <div class="form-group hidden" id="password-group">
+                        <label for="user-password">Новий пароль</label>
+                        <div class="password-wrapper">
+                            <input id="user-password"
+                                   type="password"
+                                   placeholder="Мін. 4 символи"
+                                   minlength="4"
+                                   autocomplete="new-password"
+                                   disabled />
+                            <button type="button" id="toggle-password" class="btn-icon">👁</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="user-role">Роль</label>
+                        <select id="user-role" class="input">
+                            <option value="LIBRARIAN">LIBRARIAN</option>
+                            <option value="ADMIN">ADMIN</option>
+                        </select>
+                    </div>
+
+                    <div class="modal__buttons">
+                        <button type="button" id="user-cancel-btn" class="btn btn-light">
+                            Скасувати
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            Зберегти
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
 
         <!-- Модальне вікно для додавання / редагування книги -->
         <div id="book-modal" class="modal hidden">
@@ -213,6 +324,59 @@
             </div>
         </div>
 
+        <!-- Модалка деталей книги -->
+        <div id="book-details-modal" class="modal hidden">
+            <div class="modal__backdrop"></div>
+            <div class="modal__window">
+                <h2>Інформація про книгу</h2>
+
+                <div class="form-group">
+                    <strong>Назва:</strong>
+                    <div id="book-details-name"></div>
+                </div>
+
+                <div class="form-group">
+                    <strong>Автор(и):</strong>
+                    <div id="book-details-author"></div>
+                </div>
+
+                <div class="form-group">
+                    <strong>Видавництво:</strong>
+                    <div id="book-details-publisher"></div>
+                </div>
+
+                <div class="form-group">
+                    <strong>Статус:</strong>
+                    <div id="book-details-status"></div>
+                </div>
+
+                <div class="form-group">
+                    <strong>Дата видачі:</strong>
+                    <div id="book-details-issueDate"></div>
+                </div>
+
+                <div class="form-group">
+                    <strong>Термін повернення:</strong>
+                    <div id="book-details-dueDate"></div>
+                </div>
+
+                <div class="form-group">
+                    <strong>Дата повернення:</strong>
+                    <div id="book-details-returnDate"></div>
+                </div>
+
+                <div class="form-group">
+                    <strong>Опис:</strong>
+                    <div id="book-details-description" style="white-space: pre-wrap;"></div>
+                </div>
+
+                <div class="modal__buttons">
+                    <button type="button" class="btn btn-light" id="book-details-close-btn">
+                        Закрити
+                    </button>
+                </div>
+            </div>
+        </div>
 
     </main>
 
@@ -253,6 +417,8 @@
         </form>
     </div>
 </div>
+
+<div id="toast-container"></div>
 
 <!-- Підключаємо JS -->
 <script src="/js/app.js"></script>

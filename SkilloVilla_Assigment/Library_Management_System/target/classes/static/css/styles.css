@@ -23,6 +23,9 @@ body {
     background: #1e88e5;
     color: #fff;
     padding: 16px;
+
+    display: flex;
+    flex-direction: column;
 }
 
 .sidebar__title {
@@ -273,4 +276,112 @@ body {
     display: flex;
     justify-content: flex-end;
     gap: 8px;
+}
+
+.row--overdue {
+    background-color: #ffe6e6;
+}
+
+.status--overdue {
+    color: #c00000;
+    font-weight: 600;
+}
+
+.sidebar-user {
+    margin-top: auto;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255,255,255,0.15);
+    font-size: 13px;
+}
+
+.sidebar-logout-btn {
+    margin-top: 8px;
+    width: 100%;
+    font-size: 13px;
+    padding: 6px 10px;
+    background: #fff;
+    color: #1e88e5;
+    border-radius: 6px;
+    cursor: pointer;
+}
+.sidebar-logout-btn:hover {
+    background: #e3f2fd;
+}
+
+.info-msg {
+    background: #e3f2fd;
+    color: #1565c0;
+    padding: 10px 14px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+}
+.hidden { display: none; }
+
+.hidden { display: none; }
+.password-wrapper {
+    display: flex;
+    align-items: center;
+}
+.btn-icon {
+    margin-left: 6px;
+    border: none;
+    background: #eee;
+    padding: 5px 8px;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+/* ===== Toast-повідомлення ===== */
+
+#toast-container {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.toast {
+    min-width: 220px;
+    max-width: 320px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    color: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity .2s ease, transform .2s ease;
+}
+
+.toast--show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.toast--success {
+    background: #43a047; /* зелений */
+}
+
+.toast--error {
+    background: #e53935; /* червоний */
+}
+
+.toast--info {
+    background: #1e88e5; /* синій */
+}
+
+.toast__close {
+    border: none;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    margin-left: 8px;
+    font-size: 16px;
+    line-height: 1;
 }

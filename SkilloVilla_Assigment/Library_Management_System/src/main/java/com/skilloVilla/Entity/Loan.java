@@ -17,7 +17,8 @@ public class Loan {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer loanId;
 
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = true)
+    @JoinColumn(name = "book_id", nullable = true)
     private Book book;
 
     @ManyToOne(optional = false)
@@ -28,4 +29,7 @@ public class Loan {
     private LocalDateTime returnDate;
 
     private boolean returned = false;
+
+    private Integer bookIdSnapshot;
+    private String bookNameSnapshot;
 }

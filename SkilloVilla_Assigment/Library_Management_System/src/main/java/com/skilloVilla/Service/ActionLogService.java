@@ -1,5 +1,6 @@
 package com.skilloVilla.Service;
 
+import com.skilloVilla.Dto.ActionLogDto;
 import com.skilloVilla.Entity.ActionLog;
 import com.skilloVilla.Entity.AppUser;
 import com.skilloVilla.Repository.ActionLogRepository;
@@ -37,7 +38,34 @@ public class ActionLogService {
         actionLogRepository.save(log);
     }
 
-    public List<ActionLog> getAll() {
-        return actionLogRepository.findAll();
+    public List<ActionLogDto> getAll() {
+        return actionLogRepository.findAll().stream()
+                .map(this::toDto)
+                .toList();
     }
+
+    public List<ActionLogDto> getLastLogs(int limit) {
+        return actionLogRepository.findTop50ByOrderByTimestampDesc().stream()
+                .map(this::toDto)
+                .toList();
+    }
+
+    private ActionLogDto toDto(ActionLog log) {
+        ActionLogDto dto = new ActionLogDto();
+
+        dto.setId(log.getId() != null ? log.getId().intValue() : null);
+
+        dto.setCreatedAt(log.getTimestamp());
+
+        dto.setAction(log.getAction());
+        dto.setEntityType(log.getEntityType());
+        dto.setEntityId(log.getEntityId());
+
+        dto.setUsername(
+                log.getUser() != null ? log.getUser().getUsername() : null
+        );
+
+        return dto;
+    }
+
 }

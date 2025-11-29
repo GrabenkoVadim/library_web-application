@@ -26,6 +26,8 @@ public class BookDto {
     private String description;
 
     private LocalDateTime issueDate;
+    private LocalDateTime dueDate;
     private LocalDateTime returnDate;
+
     private boolean issued;
 }

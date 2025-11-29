@@ -4,9 +4,11 @@ import com.skilloVilla.Dto.BookDto;
 import com.skilloVilla.Entity.Author;
 import com.skilloVilla.Entity.Book;
 import com.skilloVilla.Dto.AuthorDto;
+import com.skilloVilla.Entity.Loan;
 import com.skilloVilla.Exception.NotFoundException;
 import com.skilloVilla.Repository.AuthorRepository;
 import com.skilloVilla.Repository.BookRepository;
+import com.skilloVilla.Repository.LoanRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,8 @@ public class BookService {
     private final BookRepository bookRepository;
     private final AuthorRepository authorRepository;
     private final ActionLogService actionLogService;
+    private final LoanRepository loanRepository;
+
 
     public List<BookDto> getAll(String name, String author, Boolean issued) {
         Specification<Book> spec = (root, query, cb) -> {
@@ -99,14 +103,23 @@ public class BookService {
 
 
     public void delete(Integer id) {
-        if (!bookRepository.existsById(id)) {
-            throw new NotFoundException("Book not found with id " + id);
-        }
-        bookRepository.deleteById(id);
+        Book book = bookRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Book not found with id " + id));
+
+        // усі позики, що посилаються на цю книгу
+        var loans = loanRepository.findByBookBookId(id);
+
+        // занулюємо посилання, але snapshot лишається
+        loans.forEach(loan -> loan.setBook(null));
+        loanRepository.saveAll(loans);
+
+        // тепер можна видалити книгу
+        bookRepository.delete(book);
 
         actionLogService.log("DELETE_BOOK", "Book", id);
-
     }
+
+
 
     // ====== маппінг Book <-> BookDto ======
 
@@ -120,6 +133,15 @@ public class BookService {
         dto.setReturnDate(book.getBookReturnDate());
         dto.setIssued(book.isIssued());
 
+        loanRepository
+                .findFirstByBookBookIdAndReturnedFalseOrderByIssueDateDesc(book.getBookId())
+                .ifPresent(loan -> {
+                    dto.setIssueDate(loan.getIssueDate());
+                    dto.setDueDate(loan.getDueDate());
+                    dto.setReturnDate(loan.getReturnDate());
+                });
+
+        // автор(и)
         if (book.getAuthors() != null && !book.getAuthors().isEmpty()) {
             String names = book.getAuthors().stream()
                     .map(Author::getFullName)
@@ -132,6 +154,7 @@ public class BookService {
 
         return dto;
     }
+
 
 
     private Book fromDto(BookDto dto) {

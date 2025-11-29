@@ -56,6 +56,9 @@ public class LoanService {
         loan.setDueDate(dueDate);
         loan.setReturned(false);
 
+        loan.setBookIdSnapshot(book.getBookId());
+        loan.setBookNameSnapshot(book.getBookName());
+
         // оновлюємо книгу
         book.setIssued(true);
         book.setBookIssueDate(now);
@@ -126,12 +129,22 @@ public class LoanService {
     }
 
     // ===== mapping =====
-
     private LoanDto toDto(Loan loan) {
         LoanDto dto = new LoanDto();
         dto.setId(loan.getLoanId());
-        dto.setBookId(loan.getBook().getBookId());
-        dto.setBookName(loan.getBook().getBookName());
+
+        // 🆕 якщо книгу видалили – беремо значення з snapshot
+        Integer bookId = (loan.getBook() != null)
+                ? loan.getBook().getBookId()
+                : loan.getBookIdSnapshot();
+
+        String bookName = (loan.getBook() != null)
+                ? loan.getBook().getBookName()
+                : loan.getBookNameSnapshot();
+
+        dto.setBookId(bookId);
+        dto.setBookName(bookName);
+
         dto.setReaderId(loan.getReader().getReaderId());
         dto.setReaderName(loan.getReader().getFullName());
         dto.setIssueDate(loan.getIssueDate());
@@ -140,6 +153,7 @@ public class LoanService {
         dto.setReturned(loan.isReturned());
         return dto;
     }
+
 
     public List<LoanDto> getRecent(int limit) {
         Pageable pageable = PageRequest.of(
