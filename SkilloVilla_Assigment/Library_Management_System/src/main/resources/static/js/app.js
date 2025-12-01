@@ -50,6 +50,7 @@ function hideToast(toastEl) {
 
 let currentBooks = [];
 let currentReaders = [];
+let currentCollections = [];
 let adminUsers = [];
 
 // ---------- ФІЛЬТР КНИГ ----------
@@ -232,14 +233,42 @@ window.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    const collectionsTableBody = document.getElementById('collections-table-body');
+    if (collectionsTableBody) {
+        collectionsTableBody.addEventListener('click', onCollectionsTableClick);
+    }
+
+    const collectionAddBtn = document.getElementById('collection-add-btn');
+    if (collectionAddBtn) {
+        collectionAddBtn.addEventListener('click', () => openCollectionModal(null));
+    }
+
+    const collectionForm = document.getElementById('collection-form');
+    if (collectionForm) {
+        collectionForm.addEventListener('submit', onCollectionFormSubmit);
+    }
+
+    const collectionCancelBtn = document.getElementById('collection-cancel-btn');
+    if (collectionCancelBtn) {
+        collectionCancelBtn.addEventListener('click', closeCollectionModal);
+    }
+
+    const collectionModal = document.getElementById('collection-modal');
+    if (collectionModal) {
+        const backdrop = collectionModal.querySelector('.modal__backdrop');
+        if (backdrop) {
+            backdrop.addEventListener('click', closeCollectionModal);
+        }
+    }
+
     // ---------- ПЕРШЕ ЗАВАНТАЖЕННЯ ДАНИХ ----------
-    // спочатку дізнаємося, хто залогінений
     await initAuthUi();
 
     loadBooks();
     loadReaders();
     loadRecentOperations();
     loadUsers();
+    loadCollections();
 
     setInterval(loadRecentOperations, 10000);
 
@@ -256,6 +285,9 @@ function openBookModal(book) {
     const nameInput = document.getElementById('book-name');
     const authorInput = document.getElementById('book-author');
     const publisherInput = document.getElementById('book-publisher');
+    const yearInput = document.getElementById('book-year');
+    const isbnInput = document.getElementById('book-isbn');
+    const locationInput = document.getElementById('book-location');
     const descriptionInput = document.getElementById('book-description');
 
     if (!idInput || !nameInput || !authorInput || !publisherInput || !descriptionInput) {
@@ -269,12 +301,20 @@ function openBookModal(book) {
         authorInput.value = book.author ?? '';
         publisherInput.value = book.publisher ?? '';
         descriptionInput.value = book.description ?? '';
+
+        yearInput.value = book.year ?? '';
+        isbnInput.value = book.isbn ?? '';
+        locationInput.value = book.location ?? '';
     } else {
         idInput.value = '';
         nameInput.value = '';
         authorInput.value = '';
         publisherInput.value = '';
         descriptionInput.value = '';
+
+        yearInput.value = '';
+        isbnInput.value = '';
+        locationInput.value = '';
     }
 
     modal.classList.remove('hidden');
@@ -334,7 +374,7 @@ function renderBooks(books) {
     books.forEach(book => {
         const title = book.name ?? '';
         const authorsText = book.author ?? '';
-        const year = '';
+        const year = book.year != null ? book.year : '';
         const genre = '';
 
         let isOverdue = false;
@@ -426,12 +466,19 @@ async function onBookFormSubmit(event) {
     const publisher = document.getElementById('book-publisher').value;
     const description = document.getElementById('book-description').value;
 
+    const yearRaw = document.getElementById('book-year').value;
+    const isbn = document.getElementById('book-isbn').value;
+    const location = document.getElementById('book-location').value;
+
     const payload = {
         id: id ? parseInt(id, 10) : null,
         name,
         author,
         publisher,
-        description
+        description,
+        year: yearRaw ? parseInt(yearRaw, 10) : null,
+        isbn: isbn || null,
+        location: location || null
     };
 
     const method = id ? 'PUT' : 'POST';
@@ -524,6 +571,52 @@ function renderReaders(readers) {
     });
 }
 
+async function loadCollections() {
+    const tbody = document.getElementById('collections-table-body');
+    if (!tbody) return;
+
+    tbody.innerHTML = '<tr><td colspan="6">Завантаження...</td></tr>';
+
+    try {
+        const resp = await fetch('/api/collections');
+        if (!resp.ok) {
+            throw new Error('HTTP ' + resp.status);
+        }
+
+        const data = await resp.json();
+        currentCollections = data;
+
+        if (!data || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6">Збірників не знайдено</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = data.map(c => `
+            <tr data-id="${c.id}">
+                <td>${c.id}</td>
+                <td>${c.title}</td>
+                <td>${c.type ?? ''}</td>
+                <td>${c.volumeNumber ?? ''}</td>
+                <td>${c.description ?? ''}</td>
+                <td>
+                    <button class="btn btn-light btn-sm"
+                            data-c-action="edit" data-id="${c.id}">
+                        Редагувати
+                    </button>
+                    <button class="btn btn-light btn-sm"
+                            data-c-action="delete" data-id="${c.id}">
+                        Видалити
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+
+    } catch (e) {
+        console.error('Помилка при завантаженні збірників', e);
+        tbody.innerHTML = '<tr><td colspan="6">Не вдалося завантажити збірники</td></tr>';
+    }
+}
+
 function onReadersTableClick(event) {
     const btn = event.target.closest('button');
     if (!btn) return;
@@ -610,6 +703,44 @@ async function onReaderFormSubmit(event) {
         console.error('Помилка при збереженні читача', err);
         showToast('Не вдалося зберегти читача.', 'error');
     }
+}
+
+function openCollectionModal(collection) {
+    const modal = document.getElementById('collection-modal');
+    if (!modal) return;
+
+    const titleEl = document.getElementById('collection-modal-title');
+    const idInput = document.getElementById('collection-id');
+    const titleInput = document.getElementById('collection-title');
+    const typeInput = document.getElementById('collection-type');
+    const volumeInput = document.getElementById('collection-volume');
+    const descrInput = document.getElementById('collection-description');
+
+    if (collection) {
+        // режим редагування
+        titleEl.textContent = 'Редагувати збірник / том';
+        idInput.value = collection.id;
+        titleInput.value = collection.title ?? '';
+        typeInput.value = collection.type ?? '';
+        volumeInput.value = collection.volumeNumber ?? '';
+        descrInput.value = collection.description ?? '';
+    } else {
+        // створення нового
+        titleEl.textContent = 'Додати збірник / том';
+        idInput.value = '';
+        titleInput.value = '';
+        typeInput.value = '';
+        volumeInput.value = '';
+        descrInput.value = '';
+    }
+
+    modal.classList.remove('hidden');
+}
+
+function closeCollectionModal() {
+    const modal = document.getElementById('collection-modal');
+    if (!modal) return;
+    modal.classList.add('hidden');
 }
 
 async function deleteReader(id) {
@@ -731,6 +862,52 @@ async function onIssueFormSubmit(event) {
     } catch (err) {
         console.error('Помилка при видачі книги', err);
         showToast('Не вдалося видати книгу.', 'error');
+    }
+}
+
+async function onCollectionFormSubmit(e) {
+    e.preventDefault();
+
+    const id = document.getElementById('collection-id').value;
+    const title = document.getElementById('collection-title').value.trim();
+    const type = document.getElementById('collection-type').value.trim();
+    const volumeStr = document.getElementById('collection-volume').value;
+    const description = document.getElementById('collection-description').value.trim();
+
+    if (!title) {
+        alert('Назва збірника є обовʼязковою');
+        return;
+    }
+
+    const payload = {
+        title,
+        type: type || null,
+        volumeNumber: volumeStr ? parseInt(volumeStr, 10) : null,
+        description: description || null
+    };
+
+    const url = id ? `/api/collections/${id}` : '/api/collections';
+    const method = id ? 'PUT' : 'POST';
+
+    try {
+        const resp = await fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (!resp.ok) {
+            const text = await resp.text();
+            console.error('Помилка при збереженні збірника', text);
+            alert('Не вдалося зберегти збірник');
+            return;
+        }
+
+        closeCollectionModal();
+        await loadCollections();
+    } catch (err) {
+        console.error('Помилка при збереженні збірника', err);
+        alert('Не вдалося зберегти збірник');
     }
 }
 
@@ -862,10 +1039,15 @@ function openBookDetailsModal(book) {
     const publisherEl = document.getElementById('book-details-publisher');
     const statusEl = document.getElementById('book-details-status');
     const descrEl = document.getElementById('book-details-description');
+    const collectionsEl = document.getElementById('book-details-collections');
 
     const issueEl = document.getElementById('book-details-issueDate');
     const dueEl = document.getElementById('book-details-dueDate');
     const returnEl = document.getElementById('book-details-returnDate');
+
+    const yearEl = document.getElementById('book-details-year');
+    const isbnEl = document.getElementById('book-details-isbn');
+    const locationEl = document.getElementById('book-details-location');
 
     if (nameEl) nameEl.textContent = book.name ?? '';
     if (authorEl) authorEl.textContent = book.author ?? '';
@@ -889,9 +1071,34 @@ function openBookDetailsModal(book) {
 
     if (descrEl) descrEl.textContent = book.description ?? '';
 
+    if (collectionsEl) {
+        collectionsEl.innerHTML = '';
+
+        const collections = book.collections || [];
+
+        if (collections.length === 0) {
+            collectionsEl.innerHTML = '<li>Немає</li>';
+        } else {
+            collections.forEach(col => {
+                const li = document.createElement('li');
+                const volumeText = col.volumeNumber != null
+                        ? `, том/номер: ${col.volumeNumber}`
+                        : '';
+                const typeText = col.type ? ` (${col.type})` : '';
+
+                li.textContent = `${col.title}${typeText}${volumeText}`;
+                collectionsEl.appendChild(li);
+            });
+        }
+    }
+
     if (issueEl) issueEl.textContent = book.issueDate ? formatDateTime(book.issueDate) : '—';
     if (dueEl) dueEl.textContent = book.dueDate ? formatDateTime(book.dueDate) : '—';
     if (returnEl) returnEl.textContent = book.returnDate ? formatDateTime(book.returnDate) : '—';
+
+    if (yearEl) yearEl.textContent = book.year != null ? book.year : '—';
+    if (isbnEl) isbnEl.textContent = book.isbn || '—';
+    if (locationEl) locationEl.textContent = book.location || '—';
 
     modal.classList.remove('hidden');
 }
@@ -980,6 +1187,37 @@ async function onUsersTableClick(event) {
         } catch (err) {
             console.error('Delete user error', err);
             showToast('Сталася помилка при видаленні');
+        }
+    }
+}
+
+async function onCollectionsTableClick(event) {
+    const btn = event.target.closest('button');
+    if (!btn) return;
+
+    const id = btn.dataset.id;
+    const action = btn.dataset.cAction;
+    if (!id || !action) return;
+
+    if (action === 'edit') {
+        const collection = currentCollections.find(c => String(c.id) === String(id));
+        if (!collection) return;
+        openCollectionModal(collection);
+    } else if (action === 'delete') {
+        if (!confirm('Точно видалити цей збірник/том?')) return;
+
+        try {
+            const resp = await fetch(`/api/collections/${id}`, { method: 'DELETE' });
+            if (!resp.ok) {
+                const text = await resp.text();
+                console.error('Помилка при видаленні збірника', text);
+                alert('Не вдалося видалити збірник');
+                return;
+            }
+            await loadCollections();
+        } catch (err) {
+            console.error('Помилка при видаленні збірника', err);
+            alert('Не вдалося видалити збірник');
         }
     }
 }

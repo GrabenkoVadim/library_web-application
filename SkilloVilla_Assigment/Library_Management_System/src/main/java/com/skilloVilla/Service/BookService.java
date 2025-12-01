@@ -1,9 +1,11 @@
 package com.skilloVilla.Service;
 
+import com.skilloVilla.Dto.BookCollectionDto;
 import com.skilloVilla.Dto.BookDto;
 import com.skilloVilla.Entity.Author;
 import com.skilloVilla.Entity.Book;
 import com.skilloVilla.Dto.AuthorDto;
+import com.skilloVilla.Entity.BookCollection;
 import com.skilloVilla.Entity.Loan;
 import com.skilloVilla.Exception.NotFoundException;
 import com.skilloVilla.Repository.AuthorRepository;
@@ -19,33 +21,83 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class BookService {
-
     private final BookRepository bookRepository;
     private final AuthorRepository authorRepository;
     private final ActionLogService actionLogService;
     private final LoanRepository loanRepository;
 
-
-    public List<BookDto> getAll(String name, String author, Boolean issued) {
+    public List<BookDto> getAll(
+            String name,
+            String author,
+            Boolean issued,
+            Integer yearFrom,
+            Integer yearTo,
+            String isbn,
+            String location
+    ) {
         Specification<Book> spec = (root, query, cb) -> {
             Predicate p = cb.conjunction();
 
             if (name != null && !name.isBlank()) {
-                p = cb.and(p,
-                        cb.like(cb.lower(root.get("bookName")),
-                                "%" + name.toLowerCase() + "%"));
+                p = cb.and(
+                        p,
+                        cb.like(
+                                cb.lower(root.get("bookName")),
+                                "%" + name.toLowerCase() + "%"
+                        )
+                );
             }
+
             if (author != null && !author.isBlank()) {
-                p = cb.and(p,
-                        cb.like(cb.lower(root.get("bookAuthor")),
-                                "%" + author.toLowerCase() + "%"));
+                p = cb.and(
+                        p,
+                        cb.like(
+                                cb.lower(root.get("bookAuthor")),
+                                "%" + author.toLowerCase() + "%"
+                        )
+                );
             }
+
             if (issued != null) {
                 if (issued) {
                     p = cb.and(p, cb.isTrue(root.get("isIssued")));
                 } else {
                     p = cb.and(p, cb.isFalse(root.get("isIssued")));
                 }
+            }
+
+            if (yearFrom != null) {
+                p = cb.and(
+                        p,
+                        cb.greaterThanOrEqualTo(root.get("publicationYear"), yearFrom)
+                );
+            }
+
+            if (yearTo != null) {
+                p = cb.and(
+                        p,
+                        cb.lessThanOrEqualTo(root.get("publicationYear"), yearTo)
+                );
+            }
+
+            if (isbn != null && !isbn.isBlank()) {
+                p = cb.and(
+                        p,
+                        cb.like(
+                                cb.lower(root.get("isbn")),
+                                "%" + isbn.toLowerCase() + "%"
+                        )
+                );
+            }
+
+            if (location != null && !location.isBlank()) {
+                p = cb.and(
+                        p,
+                        cb.like(
+                                cb.lower(root.get("location")),
+                                "%" + location.toLowerCase() + "%"
+                        )
+                );
             }
 
             return p;
@@ -106,22 +158,15 @@ public class BookService {
         Book book = bookRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Book not found with id " + id));
 
-        // усі позики, що посилаються на цю книгу
         var loans = loanRepository.findByBookBookId(id);
 
-        // занулюємо посилання, але snapshot лишається
         loans.forEach(loan -> loan.setBook(null));
         loanRepository.saveAll(loans);
 
-        // тепер можна видалити книгу
         bookRepository.delete(book);
 
         actionLogService.log("DELETE_BOOK", "Book", id);
     }
-
-
-
-    // ====== маппінг Book <-> BookDto ======
 
     private BookDto toDto(Book book) {
         BookDto dto = new BookDto();
@@ -133,6 +178,12 @@ public class BookService {
         dto.setReturnDate(book.getBookReturnDate());
         dto.setIssued(book.isIssued());
 
+        // 🔹 рік / ISBN / розташування
+        dto.setYear(book.getPublicationYear());
+        dto.setIsbn(book.getIsbn());
+        dto.setLocation(book.getLocation());
+
+        // 🔹 поточна активна позика (як і було)
         loanRepository
                 .findFirstByBookBookIdAndReturnedFalseOrderByIssueDateDesc(book.getBookId())
                 .ifPresent(loan -> {
@@ -141,7 +192,7 @@ public class BookService {
                     dto.setReturnDate(loan.getReturnDate());
                 });
 
-        // автор(и)
+        // 🔹 автор(и)
         if (book.getAuthors() != null && !book.getAuthors().isEmpty()) {
             String names = book.getAuthors().stream()
                     .map(Author::getFullName)
@@ -152,10 +203,36 @@ public class BookService {
             dto.setAuthor(book.getBookAuthor());
         }
 
+        // 🔹 колекції / збірники / томи
+        if (book.getCollections() != null && !book.getCollections().isEmpty()) {
+            var colDtos = book.getCollections().stream()
+                    .map(col -> {
+                        BookCollectionDto cd = new BookCollectionDto();
+                        cd.setId(col.getCollectionId());
+                        cd.setTitle(col.getTitle());
+                        cd.setType(col.getType());
+                        cd.setVolumeNumber(col.getVolumeNumber());
+                        cd.setDescription(col.getDescription());
+                        return cd;
+                    })
+                    .toList();
+            dto.setCollections(colDtos);
+        } else {
+            dto.setCollections(List.of());
+        }
+
         return dto;
     }
 
-
+    private BookCollectionDto collectionToDto(BookCollection col) {
+        BookCollectionDto dto = new BookCollectionDto();
+        dto.setId(col.getCollectionId());
+        dto.setTitle(col.getTitle());
+        dto.setType(col.getType());
+        dto.setVolumeNumber(col.getVolumeNumber());
+        dto.setDescription(col.getDescription());
+        return dto;
+    }
 
     private Book fromDto(BookDto dto) {
         Book book = new Book();
@@ -167,6 +244,12 @@ public class BookService {
         book.setBookIssueDate(dto.getIssueDate());
         book.setBookReturnDate(dto.getReturnDate());
         book.setIssued(dto.isIssued());
+
+        book.setPublicationYear(dto.getYear());
+        book.setIsbn(dto.getIsbn());
+        book.setLocation(dto.getLocation());
+
+        // collections тут поки не чіпаємо — ними керує BookCollectionService
         return book;
     }
 

@@ -46,8 +46,10 @@ public class SecurityConfig {
                         .requestMatchers(
                                 new AntPathRequestMatcher("/api/books/**"),
                                 new AntPathRequestMatcher("/api/readers/**"),
-                                new AntPathRequestMatcher("/api/loans/**")
+                                new AntPathRequestMatcher("/api/loans/**"),
+                                new AntPathRequestMatcher("/api/collections/**")   // 🔹 додали
                         ).hasAnyRole("LIBRARIAN", "ADMIN")
+
 
                         // все інше – просто автентифіковані
                         .anyRequest().authenticated()

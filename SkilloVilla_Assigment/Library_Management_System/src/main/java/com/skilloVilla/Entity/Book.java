@@ -40,6 +40,15 @@ public class Book {
     private LocalDateTime bookReturnDate;
     
     private boolean isIssued = false;
+
+    @Column(name = "publication_year")
+    private Integer publicationYear;
+
+    @Column(length = 20)
+    private String isbn;
+
+    @Column(length = 255)
+    private String location;
     
     @ManyToOne
     private User user;
@@ -55,6 +64,4 @@ public class Book {
     @ManyToMany(mappedBy = "books")
     @JsonIgnore
     private List<BookCollection> collections = new ArrayList<>();
-
-
 }

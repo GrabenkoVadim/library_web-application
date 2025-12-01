@@ -123,6 +123,12 @@ public class BookCollectionService {
         dto.setIssueDate(book.getBookIssueDate());
         dto.setReturnDate(book.getBookReturnDate());
         dto.setIssued(book.isIssued());
+
+        dto.setYear(book.getPublicationYear());
+        dto.setIsbn(book.getIsbn());
+        dto.setLocation(book.getLocation());
+
         return dto;
     }
+
 }

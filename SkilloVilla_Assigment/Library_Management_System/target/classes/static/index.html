@@ -20,6 +20,7 @@
             <button class="nav-btn active" data-view="home">Головна</button>
             <button class="nav-btn" data-view="books">Каталог книг</button>
             <button class="nav-btn" data-view="readers">Читачі</button>
+            <button class="nav-btn" data-view="collections">Збірники / томи</button>
             <button class="nav-btn" data-view="admin">Адмінка</button>
         </nav>
 
@@ -133,7 +134,38 @@
             </div>
         </section>
 
+        <section id="view-collections" class="view">
+            <h1>Збірники / томи</h1>
 
+            <div class="card">
+                <div class="toolbar">
+                    <div class="toolbar-left">
+                        <h2>Список збірників</h2>
+                    </div>
+                    <div class="toolbar-right">
+                        <button id="collection-add-btn" class="btn btn-primary">
+                            Додати збірник / том
+                        </button>
+                    </div>
+                </div>
+
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Назва</th>
+                        <th>Тип</th>
+                        <th>Том / номер</th>
+                        <th>Опис</th>
+                        <th style="width: 160px;">Дії</th>
+                    </tr>
+                    </thead>
+                    <tbody id="collections-table-body">
+                    <!-- заповнюється з JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
 
         <section id="view-admin" class="view">
             <h1>Адмінка</h1>
@@ -274,6 +306,21 @@
                         <textarea id="book-description" class="textarea" rows="4"></textarea>
                     </div>
 
+                    <div class="form-group">
+                        <label for="book-year">Рік видання</label>
+                        <input id="book-year" type="number" class="input" placeholder="Наприклад, 2005">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="book-isbn">ISBN</label>
+                        <input id="book-isbn" type="text" class="input" placeholder="Наприклад, 978-5-699-12014-7">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="book-location">Розташування в бібліотеці</label>
+                        <input id="book-location" type="text" class="input" placeholder="Стелаж 3, полиця 2, ряд 1">
+                    </div>
+
                     <div class="modal__buttons">
                         <button type="button" class="btn btn-light" id="book-cancel-btn">Скасувати</button>
                         <button type="submit" class="btn btn-primary" id="book-save-btn">Зберегти</button>
@@ -346,6 +393,26 @@
                 </div>
 
                 <div class="form-group">
+                    <strong>Рік видання:</strong>
+                    <div id="book-details-year"></div>
+                </div>
+
+                <div class="form-group">
+                    <strong>ISBN:</strong>
+                    <div id="book-details-isbn"></div>
+                </div>
+
+                <div class="form-group">
+                    <strong>Збірники / томи:</strong>
+                    <ul id="book-details-collections"></ul>
+                </div>
+
+                <div class="form-group">
+                    <strong>Розташування:</strong>
+                    <div id="book-details-location"></div>
+                </div>
+
+                <div class="form-group">
                     <strong>Статус:</strong>
                     <div id="book-details-status"></div>
                 </div>
@@ -378,8 +445,79 @@
             </div>
         </div>
 
-    </main>
+        <div id="collection-modal" class="modal hidden">
+            <div class="modal__backdrop"></div>
 
+            <div class="modal__window">
+                <h2 id="collection-modal-title">Додати збірник / том</h2>
+
+                <form id="collection-form" class="modal__form">
+                    <input type="hidden" id="collection-id">
+
+                    <div class="form-group">
+                        <label for="collection-title">Назва збірника / серії</label>
+                        <input id="collection-title" type="text" class="input" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="collection-type">Тип (серія, зібрання творів, том тощо)</label>
+                        <input id="collection-type" type="text" class="input">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="collection-volume">Том / номер (якщо є)</label>
+                        <input id="collection-volume" type="number" class="input" min="1">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="collection-description">Опис</label>
+                        <textarea id="collection-description" class="textarea" rows="3"></textarea>
+                    </div>
+
+                    <div class="modal__buttons">
+                        <button type="button" id="collection-cancel-btn" class="btn btn-light">
+                            Скасувати
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            Зберегти
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div id="collection-books-modal" class="modal hidden">
+            <div class="modal__backdrop"></div>
+
+            <div class="modal__window">
+                <h2 id="collection-books-title">Книги збірника</h2>
+
+                <div class="card card--no-margin-top">
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Назва</th>
+                            <th>Автор(и)</th>
+                            <th>Статус</th>
+                            <th style="width: 120px;">Дії</th>
+                        </tr>
+                        </thead>
+                        <tbody id="collection-books-table-body">
+                        <!-- заповнюється з JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="modal__buttons">
+                    <button type="button" id="collection-books-close-btn" class="btn btn-light">
+                        Закрити
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
 </div>
 
 <div id="reader-modal" class="modal hidden">
