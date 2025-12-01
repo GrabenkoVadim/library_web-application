@@ -1,6 +1,7 @@
 package com.skilloVilla.Controller;
 
 import com.skilloVilla.Dto.AuthorDto;
+import com.skilloVilla.Dto.AuthorStatsDto;
 import com.skilloVilla.Dto.BookDto;
 import com.skilloVilla.Dto.AuthorWithBooksDto;
 import com.skilloVilla.Service.AuthorService;
@@ -40,6 +41,11 @@ public class AuthorController {
         return authorService.searchWithBooks(name);
     }
 
+    // GET /api/authors/stats
+    @GetMapping("/stats")
+    public List<AuthorStatsDto> getAuthorStats() {
+        return authorService.getAuthorStats();
+    }
 
     // POST /api/authors
     @PostMapping

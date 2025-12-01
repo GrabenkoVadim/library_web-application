@@ -1,9 +1,6 @@
 package com.skilloVilla.Service;
 
-import com.skilloVilla.Dto.AuthorDto;
-import com.skilloVilla.Dto.BookDto;
-import com.skilloVilla.Dto.AuthorWithBooksDto;
-import com.skilloVilla.Dto.BookShortDto;
+import com.skilloVilla.Dto.*;
 import com.skilloVilla.Entity.Author;
 import com.skilloVilla.Entity.Book;
 import com.skilloVilla.Exception.NotFoundException;
@@ -131,6 +128,26 @@ public class AuthorService {
                     .toList();
             dto.setBooks(books);
         }
+
+        return dto;
+    }
+
+    public List<AuthorStatsDto> getAuthorStats() {
+        return authorRepository.findAll().stream()
+                .map(this::toStatsDto)
+                .toList();
+    }
+
+    private AuthorStatsDto toStatsDto(Author author) {
+        AuthorStatsDto dto = new AuthorStatsDto();
+        dto.setId(author.getAuthorId());
+        dto.setFullName(author.getFullName());
+
+        long count = 0L;
+        if (author.getBooks() != null) {
+            count = author.getBooks().size();
+        }
+        dto.setBooksCount(count);
 
         return dto;
     }

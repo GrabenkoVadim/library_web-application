@@ -27,10 +27,15 @@ public class BookController {
     public List<BookDto> getBooks(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String author,
-            @RequestParam(required = false) Boolean issued
+            @RequestParam(required = false) Boolean issued,
+            @RequestParam(required = false) Integer yearFrom,
+            @RequestParam(required = false) Integer yearTo,
+            @RequestParam(required = false) String isbn,
+            @RequestParam(required = false) String location
     ) {
-        return bookService.getAll(name, author, issued);
+        return bookService.getAll(name, author, issued, yearFrom, yearTo, isbn, location);
     }
+
 
     /**
      * GET /api/books/{id}

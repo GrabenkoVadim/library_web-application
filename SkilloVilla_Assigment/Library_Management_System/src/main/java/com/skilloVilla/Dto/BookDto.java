@@ -5,6 +5,7 @@ import lombok.Data;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 public class BookDto {
@@ -30,4 +31,10 @@ public class BookDto {
     private LocalDateTime returnDate;
 
     private boolean issued;
+
+    private Integer year;
+    private String isbn;
+    private String location;
+
+    private List<BookCollectionDto> collections;
 }
